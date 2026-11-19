@@ -1,4 +1,4 @@
-from jax.random import PRNGKey
+from jax import Array
 from typing import Any
 from abc import ABC, abstractmethod
 from flax.struct import dataclass
@@ -27,11 +27,15 @@ class BaseEnv(ABC):
         pass
 
     @abstractmethod
-    def step(self, state:Any, action:Any, rng_key:PRNGKey) -> StepOut:
+    def _get_obs(self, state:Any, parameters:Any) -> Any:
         pass
 
     @abstractmethod
-    def reset(self, rng_key:PRNGKey) -> ResetOut:
+    def step(self, state:Any, action:Any, rng_key:Array) -> StepOut:
+        pass
+
+    @abstractmethod
+    def reset(self, rng_key:Array) -> ResetOut:
         pass
 
     @abstractmethod
