@@ -16,6 +16,7 @@ maintainers = [
 ]
 dependencies = [
     "jax>=0.12",
+    "flax>=0.12.12"
 ]
 
 [project.optional-dependencies]
