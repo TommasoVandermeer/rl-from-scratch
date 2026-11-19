@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rl-from-scratch"
+version = "0.0.0" 
+description = "A python package only developed to train my development skills in implementing RL algorithms and environments from scratch."
+readme = "README.md"
+requires-python = ">=3.14.4"
+#license = { file = "LICENSE.txt" }
+keywords = ["rl", "coding", "environments", "agents"]
+authors = [{ name = "T. Van Der Meer", email = "tommasovdm@gmail.com" }]
+maintainers = [
+  { name = "T. Van Der Meer", email = "tommasovdm@gmail.com" },
+]
+dependencies = [
+    "jax>=0.12",
+]
+
+[project.optional-dependencies]
+cuda13 = ["jax[cuda13]>=0.12"]
+test = ["coverage"]
+
+[project.urls]
+"Homepage" = "https://github.com/TommasoVandermeer/rl-from-scratch"
+
+[project.scripts]
+
+[tool.setuptools]
