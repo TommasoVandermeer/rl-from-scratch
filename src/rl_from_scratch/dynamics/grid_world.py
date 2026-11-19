@@ -15,8 +15,8 @@ DISPLACEMENTS = jnp.array([
     [1, 0],     # RIGHT
 ], dtype=jnp.int32)
 LIMITS = jnp.array([
-    [-10, 10],
-    [-10, 10]
+    [-5, 5],
+    [-5, 5]
 ], dtype=jnp.int32)
 
 ## STATE 
@@ -29,7 +29,7 @@ class GridWorldState:
 class GridWorldAction:
     move: int # a \in {0, 1, 2, 3}
 
-def dynamics(state:GridWorldState, action: GridWorldAction) -> GridWorldState:
+def dynamics(state: GridWorldState, action: GridWorldAction) -> GridWorldState:
     new_state = GridWorldState(
         position=jnp.clip(
             state.position + DISPLACEMENTS[action.move],
