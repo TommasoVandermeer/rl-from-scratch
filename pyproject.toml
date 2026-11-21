@@ -16,8 +16,8 @@ maintainers = [
 ]
 dependencies = [
     "jax>=0.12",
-    "flax>=0.12.12"
-    "matplotlib>=3.11.2"
+    "flax>=0.12.12",
+    "matplotlib>=3.11.2",
 ]
 
 [project.optional-dependencies]
