@@ -8,6 +8,7 @@ from matplotlib import patches, animation
 
 from rl_from_scratch.envs.base_env import BaseEnv, StepOut, ResetOut, RewardOut, StepData
 from rl_from_scratch.dynamics.grid_world import GridWorldState, GridWorldAction, dynamics, LIMITS
+from rl_from_scratch.spaces.discrete_space import Discrete
 
 SUCCESS_REWARD = 1.
 FAILURE_PENALTY = 1.
@@ -27,7 +28,11 @@ class GridWorldObservations:
 
 class GridWorldEnv(BaseEnv):
     def __init__(self):
-        pass
+        self._action_space = Discrete(4)
+
+    @property
+    def action_space(self) -> Discrete:
+        return self._action_space
 
     # Private functions
     def _sample_2d_categorical(self, key: Array, logits: Array) -> tuple:
@@ -42,8 +47,7 @@ class GridWorldEnv(BaseEnv):
             task_parameters = parameters,
         )
 
-    # Public functions
-    def reward(self, state: GridWorldState, action: GridWorldAction, new_state: GridWorldState, parameters: GridWorldParameters) -> RewardOut:
+    def _reward(self, state: GridWorldState, action: GridWorldAction, new_state: GridWorldState, parameters: GridWorldParameters) -> RewardOut:
         success = jnp.all(new_state.position == parameters.goal_position)
         obs = jnp.atleast_2d(parameters.obstacles_position)
         collision = jnp.any(jnp.all(new_state.position == obs, axis=-1))
@@ -56,10 +60,20 @@ class GridWorldEnv(BaseEnv):
             }
         )
 
+    # Public functions
+    @partial(jit, static_argnames=('self',))
+    def reward(self, state: GridWorldState, action: GridWorldAction, new_state: GridWorldState, parameters: GridWorldParameters) -> RewardOut:
+        return self._reward(state, action, new_state, parameters)
+
+    @partial(jit, static_argnames=('self',))
+    def sample_action(self, key):
+        move = self.action_space.sample(key)
+        return GridWorldAction(move)
+
     @partial(jit, static_argnames=('self',))
     def step(self, state: GridWorldState, action: GridWorldAction, parameters: GridWorldParameters, rng_key: Array) -> StepOut:
         new_state = dynamics(state, action)
-        reward_out = self.reward(state, action, new_state, parameters)
+        reward_out = self._reward(state, action, new_state, parameters)
         observation = self._get_obs(new_state, parameters)
         return StepOut(
             state = new_state,
@@ -97,7 +111,7 @@ class GridWorldEnv(BaseEnv):
             LIMITS[1,0] + obs_y_idx,
         ])
         # STATE
-        state = GridWorldState(position=position)
+        state = GridWorldState(position)
         # PARAMETERS
         parameters = GridWorldParameters(
             goal_position = goal_position,

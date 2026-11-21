@@ -1,10 +1,8 @@
 from jax import Array, random, lax
-import jax.numpy as jnp
 from typing import Any
 
 from rl_from_scratch.envs.base_env import StepData
 from rl_from_scratch.envs.grid_world_env import GridWorldEnv
-from rl_from_scratch.dynamics.grid_world import ACTION_LABELS, GridWorldAction
 
 seed = 0
 n_steps = 100
@@ -15,9 +13,7 @@ parameters = reset_out.parameters
 def scan_body(carry: tuple[Any, Any], key: Array) -> tuple[tuple[Any, Any], StepData]:
     state, observation = carry
     action_key, step_key = random.split(key)
-    action = GridWorldAction(
-        move = random.categorical(action_key, jnp.log(jnp.ones((4,))/4))
-    )
+    action = env.sample_action(action_key)
     step_out = env.step(state, action, parameters, step_key)
     step_data = StepData(
         state = state,
@@ -36,5 +32,4 @@ _, trajectory = lax.scan(
     random.split(random.PRNGKey(seed), n_steps),
     n_steps,
 )
-print(trajectory.state.position)
 env.render(trajectory, parameters)

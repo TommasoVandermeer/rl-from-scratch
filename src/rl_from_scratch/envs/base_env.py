@@ -4,6 +4,8 @@ from typing import Any
 from abc import ABC, abstractmethod
 from flax.struct import dataclass, field
 
+from rl_from_scratch.spaces.base_space import Space
+
 @dataclass
 class StepData:
     state: Any
@@ -40,8 +42,17 @@ class BaseEnv(ABC):
     def __init__(self):
         pass
 
+    @property
+    @abstractmethod
+    def action_space(self) -> Space:
+        pass
+
     @abstractmethod
     def _get_obs(self, state: Any, parameters: Any) -> Any:
+        pass
+
+    @abstractmethod
+    def sample_action(self) -> Any:
         pass
 
     @abstractmethod
