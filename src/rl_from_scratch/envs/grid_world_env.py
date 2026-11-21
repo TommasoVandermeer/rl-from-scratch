@@ -1,9 +1,12 @@
 import jax.numpy as jnp
+import numpy as np
 from jax import Array, jit, vmap, random
 from flax.struct import dataclass
 from functools import partial
+import matplotlib.pyplot as plt
+from matplotlib import patches, animation
 
-from rl_from_scratch.envs.base_env import BaseEnv, StepOut, ResetOut, RewardOut
+from rl_from_scratch.envs.base_env import BaseEnv, StepOut, ResetOut, RewardOut, StepData
 from rl_from_scratch.dynamics.grid_world import GridWorldState, GridWorldAction, dynamics, LIMITS
 
 SUCCESS_REWARD = 1.
@@ -63,7 +66,6 @@ class GridWorldEnv(BaseEnv):
             observation = observation,
             reward = reward_out.reward,
             terminated = reward_out.terminated,
-            truncated = jnp.zeros((1,), dtype=jnp.bool),
             info = reward_out.reward_info,
         )
 
@@ -109,25 +111,28 @@ class GridWorldEnv(BaseEnv):
             parameters = parameters
         )
 
-
-# DEBUG
-# from rl_from_scratch.dynamics.grid_world import ACTION_LABELS
-# env = GridWorldEnv()
-# reset_data = env.reset(random.PRNGKey(0))
-# state = reset_data.state
-# observation = reset_data.observation
-# parameters = reset_data.parameters
-# action = 0
-# step_data = env.step(
-#     state,
-#     GridWorldAction(move=action),
-#     parameters,
-#     random.PRNGKey(0)
-# )
-# print(
-#     f"Initial state: {state.position}\n",
-#     f"Goal: {parameters.goal_position}\n",
-#     f"Obstacle: {parameters.obstacles_position}\n",
-#     f"Action: {ACTION_LABELS[action]}\n",
-#     f"New state: {step_data.state.position}"
-# )
+    def render(self, trajectory: StepData, parameters: GridWorldParameters) -> None:
+        positions = np.array(trajectory.state.position)
+        obstacle_position = np.array(parameters.obstacles_position)
+        goal_position = np.array(parameters.goal_position)
+        # Plot specs
+        fig, ax = plt.subplots(1,1)
+        ax.set_aspect("equal")
+        ax.set_xlim(float(LIMITS[0,0]), float(LIMITS[0,1]) + 1)
+        ax.set_ylim(float(LIMITS[1,0]), float(LIMITS[1,1]) + 1)
+        ax.set_xticks(jnp.arange(LIMITS[0,0], LIMITS[0,1] + 2))
+        ax.set_yticks(jnp.arange(LIMITS[1,0], LIMITS[1,1] + 2))
+        ax.grid(True)
+        # Static objects
+        ax.scatter(goal_position[0] + .5, goal_position[1] + .5, s=100, c='red', marker='*')
+        obstacle = patches.Rectangle((obstacle_position[0], obstacle_position[1]), 1., 1., color='black')
+        ax.add_patch(obstacle)
+        # Dynamic objects
+        robot = patches.Circle((positions[0,0] + .5, positions[0,1] + .5), radius=0.5)
+        ax.add_patch(robot)
+        # Animation
+        def update(frame):
+            robot.center = (positions[frame,0] + .5, positions[frame,1] + .5)
+            return (robot,)
+        animation.FuncAnimation(fig, update, frames=len(positions), interval=200, blit=False)
+        plt.show()
