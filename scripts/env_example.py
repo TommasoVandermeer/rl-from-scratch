@@ -1,8 +1,8 @@
 from jax import Array, random, lax
 from typing import Any
 
-from rl_from_scratch.envs.base_env import StepData
-from rl_from_scratch.envs.grid_world_env import GridWorldEnv
+from rl_from_scratch.envs.env import StepData
+from rl_from_scratch.envs.grid_world import GridWorldEnv
 
 seed = 0
 n_steps = 100

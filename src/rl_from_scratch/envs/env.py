@@ -4,7 +4,7 @@ from typing import Any
 from abc import ABC, abstractmethod
 from flax.struct import dataclass, field
 
-from rl_from_scratch.spaces.base_space import Space
+from rl_from_scratch.spaces.space import Space
 
 @dataclass
 class StepData:
@@ -38,7 +38,7 @@ class RewardOut:
     terminated: Array
     reward_info: Any
 
-class BaseEnv(ABC):
+class Env(ABC):
     def __init__(self):
         pass
 

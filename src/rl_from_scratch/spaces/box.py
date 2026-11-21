@@ -3,7 +3,7 @@ import jax.numpy as jnp
 from flax.struct import dataclass
 from functools import partial
 
-from rl_from_scratch.spaces.base_space import Space
+from rl_from_scratch.spaces.space import Space
 
 @dataclass
 class Box(Space):

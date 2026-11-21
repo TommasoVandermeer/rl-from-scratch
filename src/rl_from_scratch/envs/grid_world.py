@@ -6,9 +6,9 @@ from functools import partial
 import matplotlib.pyplot as plt
 from matplotlib import patches, animation
 
-from rl_from_scratch.envs.base_env import BaseEnv, StepOut, ResetOut, RewardOut, StepData
+from rl_from_scratch.envs.env import Env, StepOut, ResetOut, RewardOut, StepData
 from rl_from_scratch.dynamics.grid_world import GridWorldState, GridWorldAction, dynamics, LIMITS
-from rl_from_scratch.spaces.discrete_space import Discrete
+from rl_from_scratch.spaces.discrete import Discrete
 
 SUCCESS_REWARD = 1.
 FAILURE_PENALTY = 1.
@@ -26,7 +26,7 @@ class GridWorldObservations:
     position: Array
     task_parameters: GridWorldParameters
 
-class GridWorldEnv(BaseEnv):
+class GridWorldEnv(Env):
     def __init__(self):
         self._action_space = Discrete(4)
 
