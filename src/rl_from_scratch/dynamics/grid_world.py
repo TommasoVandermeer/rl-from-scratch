@@ -15,8 +15,8 @@ DISPLACEMENTS = jnp.array([
     [1, 0],     # RIGHT
 ], dtype=jnp.int32)
 LIMITS = jnp.array([
-    [-5, 5],
-    [-5, 5]
+    [-3, 2],
+    [-3, 2]
 ], dtype=jnp.int32)
 
 ## STATE 
@@ -27,7 +27,7 @@ class GridWorldState:
 ## ACTION
 @dataclass
 class GridWorldAction:
-    move: int # a \in {0, 1, 2, 3}
+    move: Array # a \in {0, 1, 2, 3}
 
 def dynamics(state: GridWorldState, action: GridWorldAction) -> GridWorldState:
     new_state = GridWorldState(
@@ -38,27 +38,3 @@ def dynamics(state: GridWorldState, action: GridWorldAction) -> GridWorldState:
         )
     )
     return new_state
-
-# DEBUG
-# for action in range(len(DISPLACEMENTS)):
-#     print(
-#         f"From [{0},{0}] applying {ACTION_LABELS[action]}: ", 
-#         dynamics(
-#             GridWorldState(position=jnp.zeros((2,))), 
-#             GridWorldAction(move=action),
-#         ).position
-#     )
-#     print(
-#         f"From [{LIMITS[0,0]},{LIMITS[1,0]}] applying {ACTION_LABELS[action]}: ", 
-#         dynamics(
-#             GridWorldState(position=jnp.array([LIMITS[0,0],LIMITS[1,0]])), 
-#             GridWorldAction(move=action)
-#         ).position
-#     )
-#     print(
-#         f"From [{LIMITS[0,1]},{LIMITS[1,1]}] applying {ACTION_LABELS[action]}: ", 
-#         dynamics(
-#             GridWorldState(position=jnp.array([LIMITS[0,1],LIMITS[1,1]])), 
-#             GridWorldAction(move=action)
-#         ).position
-# )
