@@ -15,8 +15,8 @@ DISPLACEMENTS = jnp.array([
     [1, 0],     # RIGHT
 ], dtype=jnp.int32)
 LIMITS = jnp.array([
-    [-3, 2],
-    [-3, 2]
+    [0, 5],
+    [0, 5]
 ], dtype=jnp.int32)
 
 ## STATE 

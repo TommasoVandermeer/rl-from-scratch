@@ -1,6 +1,6 @@
 import jax.numpy as jnp
 import numpy as np
-from jax import Array, jit, vmap, random
+from jax import Array, jit, vmap, random, nn
 from flax.struct import dataclass
 from functools import partial
 import matplotlib.pyplot as plt
@@ -29,12 +29,31 @@ class GridWorldObservations:
 class GridWorldEnv(Env):
     def __init__(self):
         self._action_space = Discrete(4)
+        self._limits = LIMITS
+        self._width = LIMITS[0,1] - LIMITS[0,0] + 1
+        self._height = LIMITS[1,1] - LIMITS[1,0] + 1
+        self._n_cells = self._width * self._height
+        self.transitions = vmap(vmap(dynamics, in_axes=(None,0)), in_axes=(0,None))(
+            vmap(self._idx_to_state)(jnp.arange(self._n_cells)),
+            vmap(lambda idx: GridWorldAction(idx))(jnp.arange(4))
+        )
+        next_idx = vmap(self._state_to_idx)(self.transitions)
+        self.p = nn.one_hot(next_idx, num_classes=int(self._n_cells))
 
     @property
     def action_space(self) -> Discrete:
         return self._action_space
 
     # Private functions
+    def _state_to_idx(self, state: GridWorldState):
+        position = state.position
+        return self._width * (position[0] - self._limits[0,0]) + (position[1] - self._limits[1,0])
+    
+    def _idx_to_state(self, idx: Array):
+        y = idx % self._width + self._limits[1,0]
+        x = idx // self._width + self._limits[0,0]
+        return GridWorldState(jnp.array([x, y]))
+
     def _sample_2d_categorical(self, key: Array, logits: Array) -> tuple:
         W, H = logits.shape
         flat_idx = random.categorical(key, logits.ravel())
@@ -61,6 +80,15 @@ class GridWorldEnv(Env):
         )
 
     # Public functions
+    def rewards_terminations(self, parameters: GridWorldParameters):
+        rewards_out = vmap(vmap(self._reward, in_axes=(None,0,0,None)), in_axes=(0,None,0,None))(
+            vmap(self._idx_to_state)(jnp.arange(self._n_cells)),
+            vmap(lambda idx: GridWorldAction(idx))(jnp.arange(4)),
+            self.transitions,
+            parameters
+        )
+        return rewards_out.reward, rewards_out.terminated
+
     @partial(jit, static_argnames=('self',))
     def reward(self, state: GridWorldState, action: GridWorldAction, new_state: GridWorldState, parameters: GridWorldParameters) -> RewardOut:
         return self._reward(state, action, new_state, parameters)
@@ -132,11 +160,20 @@ class GridWorldEnv(Env):
         # Plot specs
         fig, ax = plt.subplots(1,1)
         ax.set_aspect("equal")
-        ax.set_xlim(float(LIMITS[0,0]), float(LIMITS[0,1]) + 1)
-        ax.set_ylim(float(LIMITS[1,0]), float(LIMITS[1,1]) + 1)
-        ax.set_xticks(jnp.arange(LIMITS[0,0], LIMITS[0,1] + 2))
-        ax.set_yticks(jnp.arange(LIMITS[1,0], LIMITS[1,1] + 2))
-        ax.grid(True)
+        x_edges = jnp.arange(LIMITS[0, 0], LIMITS[0, 1] + 2)
+        y_edges = jnp.arange(LIMITS[1, 0], LIMITS[1, 1] + 2)
+        x_centers = (x_edges[:-1] + x_edges[1:]) / 2
+        y_centers = (y_edges[:-1] + y_edges[1:]) / 2
+        x_labels = [str(int(x)) for x in jnp.arange(LIMITS[0, 0], LIMITS[0, 1] + 1)]
+        y_labels = [str(int(y)) for y in jnp.arange(LIMITS[1, 0], LIMITS[1, 1] + 1)]
+        ax.set_xlim(float(x_edges[0]), float(x_edges[-1]))
+        ax.set_ylim(float(y_edges[0]), float(y_edges[-1]))
+        ax.set_xticks(x_edges, minor=True)
+        ax.set_yticks(y_edges, minor=True)
+        ax.grid(True, which="minor", linestyle="--", alpha=0.7)
+        ax.set_xticks(x_centers, labels=x_labels, minor=False)
+        ax.set_yticks(y_centers, labels=y_labels, minor=False)
+        ax.tick_params(axis="both", which="both", length=0)
         # Static objects
         ax.scatter(goal_position[0] + .5, goal_position[1] + .5, s=100, c='red', marker='*')
         obstacle = patches.Rectangle((obstacle_position[0], obstacle_position[1]), 1., 1., color='black')

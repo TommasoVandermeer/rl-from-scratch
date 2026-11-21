@@ -16,5 +16,5 @@ class Agent(ABC):
         pass
 
     @abstractmethod
-    def update(self, update_data: Any) -> UpdateOut:
+    def update(self, agent_state: Any, update_data: Any) -> UpdateOut:
         pass
